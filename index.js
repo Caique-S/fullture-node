@@ -4,10 +4,12 @@ require('dotenv').config();
 const fs = require("fs");
 const { randomUUID } = require("crypto");
 const Operador = require("./models");
+const { hostname } = require("os");
 const app = express();
 app.use(express.json());
 
 const PORT = 3030;
+const HOST = "0.0.0.0"
 const mongoUrl = process.env.MONGODB_URL
 mongoose
   .connect(mongoUrl)
@@ -104,6 +106,6 @@ app.delete("/:id", async (request, response) => {
   }
 });
 
-app.listen(PORT || process.env.PORT, () => {
+app.listen(PORT || process.env.PORT,HOST, () => {
   console.log("Servidor online. Porta: " + PORT);
 });
