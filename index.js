@@ -107,5 +107,5 @@ app.delete("/:id", async (request, response) => {
 });
 
 app.listen(PORT || process.env.PORT,HOST, () => {
-  console.log("Servidor online. Porta: " + PORT);
+  console.log("Servidor online.");
 });
