@@ -106,6 +106,6 @@ app.delete("/:id", async (request, response) => {
   }
 });
 
-app.listen(PORT || process.env.PORT,HOST, () => {
+app.listen(process.env.PORT || PORT,HOST, () => {
   console.log("Servidor online.");
 });
