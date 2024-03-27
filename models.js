@@ -1,15 +1,26 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 // Definindo o esquema do Operador
-const operadorSchema = new mongoose.Schema({
+const vendasSchema = new mongoose.Schema({
   _id: String,
   operador: {
     id: String,
     nome: String,
-    produtos: [String]
-  }
+  },
+    produtos: [{
+      _id: String,
+      data: {
+        type:Date,
+        default:Date.now
+      },
+      descricao: String,
+      marca: String,
+      unidadeMedida: String,
+      quantidade: Number,
+      valorUnitario: Number,
+    }],
 });
 
-const Operador = mongoose.model('Operador', operadorSchema);
+const Vendas = mongoose.model("Vendas", vendasSchema);
 
-module.exports = Operador;
+module.exports = Vendas;

@@ -1,65 +1,63 @@
 const express = require("express");
 const mongoose = require("mongoose");
-require('dotenv').config();
-const fs = require("fs");
+require("dotenv").config();
 const { randomUUID } = require("crypto");
-const Operador = require("./models");
-const { hostname } = require("os");
+const Vendas = require("./models");
 const app = express();
 app.use(express.json());
 
 const PORT = 3030;
-const HOST = "0.0.0.0"
-const mongoUrl = process.env.MONGODB_URL
+const HOST = "0.0.0.0";
+const mongoUrl = process.env.MONGODB_URL;
 mongoose
   .connect(mongoUrl)
   .then(() => console.log("Conecxão Estabelecida"))
-  .catch(() => {console.error("Conexão não estabelecida");
-});
+  .catch(() => {
+    console.error("Conexão não estabelecida");
+  });
 // Rota que registra Vendas
-app.post("/", async (request, response) => {
-  const { id, nome, produtos } = request.body;
+app.post("https://fullture-node.onrender.com/", async (request, response) => {
+  const {id,nome,produtos,} = request.body;
   try {
     const _id_ = randomUUID();
-    const order = new Operador({
+    const dataCriacao = Date.now();
+
+    const order = new Vendas({
       _id: _id_,
       operador: {
         id,
         nome,
-        produtos,
       },
+      produtos: produtos.map((produto) => ({
+        _id: randomUUID(),
+        data: dataCriacao,
+        descricao: produto.descricao,
+        marca: produto.marca,
+        unidadeMedida: produto.unidadeMedida,
+        quantidade: produto.quantidade,
+        valorUnitario: produto.valorUnitario,
+      })),
     });
     await order.save();
-    fs.writeFile("vendas.json", JSON.stringify(order), (err) => {
-      if (err) {
-        console.log(err);
-        return response
-          .status(500)
-          .json({ error: "Erro ao inserir produto na Base de Dados local" });
-      } else {
-        console.log("Produto inserido em Base de Dados local.");
-        response.send(order);
-      }
-    });
+    return response.status(201).json({ message: "Pedido salvo com sucesso" });
   } catch (error) {
-    console.log("Deu erro !!!", error);
     return response.status(500).json({ error: "Erro ao salvar pedido" });
   }
 });
 // Rota que retorna Todos os registros de Vendas
-app.get("/", async (request, response) => {
+app.get("https://fullture-node.onrender.com/", async (request, response) => {
   try {
-    const order = await Operador.find();
+    const order = await Vendas.find();
     response.json(order);
   } catch (error) {
     console.log("Erro ao buscar Dados");
   }
 });
 // Rota que busca venda específica
-app.get("/:id", async (request, response) => {
+app.get("https://fullture-node.onrender.com/:id", async (request, response) => {
   try {
     const { id } = request.params;
-    const order = await Operador.findById(id);
+    const order = await Vendas.find({ _id: id });
     if (!order) {
       return response.status(404).json({ error: "Registro não Encontrado" });
     }
@@ -69,36 +67,90 @@ app.get("/:id", async (request, response) => {
     return response.status(500).json({ error: "Erro ao buscar Dados" });
   }
 });
-//Rota que altera cada campo da venda Separadamente
-app.patch("/:id", async (request, response) => {
+// Buscar por produto especifico
+app.get("https://fullture-node.onrender.com/products/:id", async (request, response) => {
   try {
     const { id } = request.params;
-    const { id:bodyId , nome, produtos } = request.body;
+    const order = await Vendas.findOne(
+      { "produtos._id": id },
+      { "produtos.$": 1 }
+    );
+    if (!order) {
+      return response.status(404).json({ error: "Registro não Encontrado" });
+    }
+    const product = order.produtos[0];
+    return response.json(product);
+  } catch (error) {
+    console.error("Erro ao buscar Dados:", error);
+    return response.status(500).json({ error: "Erro ao buscar Dados" });
+  }
+});
+//Rota que altera dados sobre o operador especifico
+app.patch("https://fullture-node.onrender.com/operator/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const {id: bodyId,nome,} = request.body;
 
-    const order = await Operador.findById(id);
+    const order = await Vendas.findById(id);
     if (!order) {
       return response.status(404).json({ error: "Registro não encontrado" });
     }
     order.operador.id = bodyId || order.operador.id;
     order.operador.nome = nome || order.operador.nome;
-    order.operador.produtos = produtos || order.operador.produtos ;
 
     await order.save();
-    return response.json(order)
+    return response.json(order);
   } catch (error) {
     console.error("Erro ao atualizar registro:", error);
     return response.status(500).json({ error: "Erro ao atualizar registro" });
   }
 });
+// Rota que altera dados sobre algum produto especifico
+app.patch("https://fullture-node.onrender.com/products/:id", async (request, response) => {
 
-app.delete("/:id", async (request, response) => {
   try {
-    const {id} = request.params
-    const order = await Operador.findById(id)
-    if(!order){
+    const { id } = request.params;
+    const updates = request.body;
+
+    const order = await Vendas.findOne({ "produtos._id": id });
+    console.log(order)
+
+    if (!order) {
+      return response.status(404).json({ error: "Produto não encontrado" });
+    }
+
+    order.produtos = order.produtos.map(produto => {
+      if (produto._id === id) {
+        console.log("Variavél produto: " = produto)
+        for (const campo in updates) {
+          if (updates[campo] !== undefined) {
+            console.log("Campos: " + campo)
+            console.log("Updates: " + updates)
+            produto[campo] = updates[campo];
+          }
+        }
+      }
+      return produto;
+    });
+
+    await order.save();
+    const updatedProduct = order.produtos.find(produto => produto._id === id);
+    return response.json(updatedProduct);
+  } catch (error) {
+    console.error("Erro ao atualizar produto:", error);
+    return response.status(500).json({ error: "Erro ao atualizar produto" });
+  }
+});
+
+//Rota que Deleta todo o Registro de Vendas
+app.delete("https://fullture-node.onrender.com/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const order = await Vendas.findById(id);
+    if (!order) {
       return response.status(404).json({ error: "Regitro não Encontrado!!" });
     }
-    await order.deleteOne()
+    await order.deleteOne();
     return response.json({ message: "Registro excluído com sucesso" });
   } catch (error) {
     console.error("Erro ao excluir registro:", error);
@@ -106,6 +158,6 @@ app.delete("/:id", async (request, response) => {
   }
 });
 
-app.listen(process.env.PORT || PORT,HOST, () => {
+app.listen(PORT || process.env.PORT, HOST, () => {
   console.log("Servidor online.");
 });
