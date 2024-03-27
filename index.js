@@ -16,7 +16,7 @@ mongoose
     console.error("Conexão não estabelecida");
   });
 // Rota que registra Vendas
-app.post("https://fullture-node.onrender.com/", async (request, response) => {
+app.post("/", async (request, response) => {
   const {id,nome,produtos,} = request.body;
   try {
     const _id_ = randomUUID();
@@ -45,7 +45,7 @@ app.post("https://fullture-node.onrender.com/", async (request, response) => {
   }
 });
 // Rota que retorna Todos os registros de Vendas
-app.get("https://fullture-node.onrender.com/", async (request, response) => {
+app.get("/", async (request, response) => {
   try {
     const order = await Vendas.find();
     response.json(order);
@@ -54,7 +54,7 @@ app.get("https://fullture-node.onrender.com/", async (request, response) => {
   }
 });
 // Rota que busca venda específica
-app.get("https://fullture-node.onrender.com/:id", async (request, response) => {
+app.get("/:id", async (request, response) => {
   try {
     const { id } = request.params;
     const order = await Vendas.find({ _id: id });
@@ -68,7 +68,7 @@ app.get("https://fullture-node.onrender.com/:id", async (request, response) => {
   }
 });
 // Buscar por produto especifico
-app.get("https://fullture-node.onrender.com/products/:id", async (request, response) => {
+app.get("/products/:id", async (request, response) => {
   try {
     const { id } = request.params;
     const order = await Vendas.findOne(
@@ -86,7 +86,7 @@ app.get("https://fullture-node.onrender.com/products/:id", async (request, respo
   }
 });
 //Rota que altera dados sobre o operador especifico
-app.patch("https://fullture-node.onrender.com/operator/:id", async (request, response) => {
+app.patch("/operator/:id", async (request, response) => {
   try {
     const { id } = request.params;
     const {id: bodyId,nome,} = request.body;
@@ -106,7 +106,7 @@ app.patch("https://fullture-node.onrender.com/operator/:id", async (request, res
   }
 });
 // Rota que altera dados sobre algum produto especifico
-app.patch("https://fullture-node.onrender.com/products/:id", async (request, response) => {
+app.patch("/products/:id", async (request, response) => {
 
   try {
     const { id } = request.params;
@@ -143,7 +143,7 @@ app.patch("https://fullture-node.onrender.com/products/:id", async (request, res
 });
 
 //Rota que Deleta todo o Registro de Vendas
-app.delete("https://fullture-node.onrender.com/:id", async (request, response) => {
+app.delete("/:id", async (request, response) => {
   try {
     const { id } = request.params;
     const order = await Vendas.findById(id);
