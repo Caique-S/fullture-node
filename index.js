@@ -113,7 +113,6 @@ app.patch("/products/:id", async (request, response) => {
     const updates = request.body;
 
     const order = await Vendas.findOne({ "produtos._id": id });
-    console.log(order)
 
     if (!order) {
       return response.status(404).json({ error: "Produto não encontrado" });
@@ -121,11 +120,8 @@ app.patch("/products/:id", async (request, response) => {
 
     order.produtos = order.produtos.map(produto => {
       if (produto._id === id) {
-        console.log("Variavél produto: " = produto)
         for (const campo in updates) {
           if (updates[campo] !== undefined) {
-            console.log("Campos: " + campo)
-            console.log("Updates: " + updates)
             produto[campo] = updates[campo];
           }
         }
