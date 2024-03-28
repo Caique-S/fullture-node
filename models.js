@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-// Definindo o esquema do Operador
 const vendasSchema = new mongoose.Schema({
   _id: String,
   operador: {
@@ -21,6 +20,21 @@ const vendasSchema = new mongoose.Schema({
     }],
 });
 
-const Vendas = mongoose.model("Vendas", vendasSchema);
+const produtos = new mongoose.Schema({
+  _id: String,
+  data: {
+    type:Date,
+    default:Date.now
+  },
+  nome: String,
+  marca: String,
+  unidadeMedida: String,
+  quantidade: Number,
+  valorUnitario: Number,
+})
 
-module.exports = Vendas;
+
+const Vendas = mongoose.model("Vendas", vendasSchema);
+const Produtos = mongoose.model("Produtos", produtos)
+
+module.exports = {Vendas,Produtos};

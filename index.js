@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const { randomUUID } = require("crypto");
-const Vendas = require("./models");
+const {Vendas,Produtos} = require("./models");
 const app = express();
 app.use(express.json());
 
@@ -16,7 +16,7 @@ mongoose
     console.error("Conexão não estabelecida");
   });
 // Rota que registra Vendas
-app.post("/", async (request, response) => {
+app.post("/vendas/", async (request, response) => {
   const {id,nome,produtos,} = request.body;
   try {
     const _id_ = randomUUID();
@@ -44,8 +44,39 @@ app.post("/", async (request, response) => {
     return response.status(500).json({ error: "Erro ao salvar pedido" });
   }
 });
+//Rota que registra produto
+app.post("/produtos/", async (request,response) =>{
+  try {
+    const {nome,marca,unidadeMedida,quantidade,valorUnitario} = request.body
+
+    const produtos = new Produtos({
+      _id: randomUUID(),
+      data: Date.now(),
+      nome,
+      marca,
+      unidadeMedida,
+      quantidade,
+      valorUnitario,  
+    })
+    await produtos.save()
+    return response.status(201).json({ message: "Produto salvo com sucesso" })
+  } catch (error) {
+    return response.status(500).json({ error: "Erro ao salvar pedido" });
+  }
+})
+
+//Rota que lista todos os produtos 
+app.get("/produtos/", async (request, response) => {
+  try {
+    const products = await Produtos.find();
+    response.json(products);
+  } catch (error) {
+    console.log("Erro ao buscar Dados");
+  }
+});
+
 // Rota que retorna Todos os registros de Vendas
-app.get("/", async (request, response) => {
+app.get("/vendas/", async (request, response) => {
   try {
     const order = await Vendas.find();
     response.json(order);
@@ -53,8 +84,10 @@ app.get("/", async (request, response) => {
     console.log("Erro ao buscar Dados");
   }
 });
+
+
 // Rota que busca venda específica
-app.get("/:id", async (request, response) => {
+app.get("/vendas/:id", async (request, response) => {
   try {
     const { id } = request.params;
     const order = await Vendas.find({ _id: id });
@@ -67,8 +100,8 @@ app.get("/:id", async (request, response) => {
     return response.status(500).json({ error: "Erro ao buscar Dados" });
   }
 });
-// Buscar por produto especifico
-app.get("/products/:id", async (request, response) => {
+// Buscar por produto especifico em uma venda
+app.get("/vendas/produtos/:id", async (request, response) => {
   try {
     const { id } = request.params;
     const order = await Vendas.findOne(
@@ -86,7 +119,7 @@ app.get("/products/:id", async (request, response) => {
   }
 });
 //Rota que altera dados sobre o operador especifico
-app.patch("/operator/:id", async (request, response) => {
+app.patch("/vendas/operador/:id", async (request, response) => {
   try {
     const { id } = request.params;
     const {id: bodyId,nome,} = request.body;
@@ -105,14 +138,38 @@ app.patch("/operator/:id", async (request, response) => {
     return response.status(500).json({ error: "Erro ao atualizar registro" });
   }
 });
-// Rota que altera dados sobre algum produto especifico
-app.patch("/products/:id", async (request, response) => {
+//Rota para alteração no cadastro do produto
+app.patch("/produtos/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const {nome,marca,unidadeMedida,quantidade,valorUnitario} = request.body;
+
+    const product = await Produtos.findById(id);
+    if (!product) {
+      return response.status(404).json({ error: "Produto não encontrado" });
+    }
+    product.nome = nome || product.nome
+    product.marca = marca || product.marca
+    product.unidadeMedida = unidadeMedida || product.unidadeMedida
+    product.quantidade = quantidade || product.quantidade
+    product.valorUnitario = valorUnitario || product.valorUnitario
+
+    await product.save();
+    return response.json(product);
+  } catch (error) {
+    console.error("Erro ao atualizar Produto:", error);
+    return response.status(500).json({ error: "Erro ao atualizar Produto" });
+  }
+});
+// Rota que altera dados sobre produtos registrados em vendas
+app.patch("/vendas/produtos/:id", async (request, response) => {
 
   try {
     const { id } = request.params;
     const updates = request.body;
 
     const order = await Vendas.findOne({ "produtos._id": id });
+    console.log(order)
 
     if (!order) {
       return response.status(404).json({ error: "Produto não encontrado" });
@@ -137,9 +194,24 @@ app.patch("/products/:id", async (request, response) => {
     return response.status(500).json({ error: "Erro ao atualizar produto" });
   }
 });
+// Rota para apagar produtos
+app.delete("/produtos/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const product = await Produtos.findById(id);
+    if (!product) {
+      return response.status(404).json({ error: "Produto não Encontrado!!" });
+    }
+    await product.deleteOne();
+    return response.json({ message: "Produto excluído com sucesso" });
+  } catch (error) {
+    console.error("Erro ao excluir Produto:", error);
+    return response.status(500).json({ error: "Erro ao excluir Produto" });
+  }
+});
 
 //Rota que Deleta todo o Registro de Vendas
-app.delete("/:id", async (request, response) => {
+app.delete("/vendas/:id", async (request, response) => {
   try {
     const { id } = request.params;
     const order = await Vendas.findById(id);
